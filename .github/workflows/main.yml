@@ -16,10 +16,19 @@ jobs:
         run: |
           cat << 'EOF' > Tweak.x
           #import <Foundation/Foundation.h>
+          
           %hook FRTweaksAuthController
           - (BOOL)isVerified { return YES; }
+          + (BOOL)isVerified { return YES; }
           - (BOOL)isValid { return YES; }
+          + (BOOL)isValid { return YES; }
           - (BOOL)isUnlocked { return YES; }
+          + (BOOL)isUnlocked { return YES; }
+          %end
+          
+          %hook RGReelsUnlockHandler
+          - (BOOL)isUnlocked { return YES; }
+          + (BOOL)isUnlocked { return YES; }
           %end
           EOF
           
