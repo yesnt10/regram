@@ -12,6 +12,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create Tweak Files
+        run: |
+          cat << 'EOF' > Tweak.x
+          #import <Foundation/Foundation.h>
+          %hook FRTweaksAuthController
+          - (BOOL)isVerified { return YES; }
+          - (BOOL)isValid { return YES; }
+          - (BOOL)isUnlocked { return YES; }
+          %end
+          EOF
+          
+          cat << 'EOF' > Makefile
+          TARGET := iphone:clang:latest:14.0
+          INSTALL_TARGET_PROCESSES = Instagram
+          include $(THEOS)/makefiles/common.mk
+          TWEAK_NAME = RegramBypass
+          RegramBypass_FILES = Tweak.x
+          RegramBypass_CFLAGS = -fobjc-arc
+          include $(THEOS_MAKE_PATH)/tweak.mk
+          EOF
+          
+          cat << 'EOF' > RegramBypass.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict><key>Filter</key><dict><key>Bundles</key><array><string>com.burbn.instagram</string></array></dict></dict></plist>
+          EOF
+
       - name: Setup Theos
         run: |
           git clone --recursive https://github.com/theos/theos.git theos
