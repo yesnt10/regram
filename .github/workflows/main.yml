@@ -18,12 +18,13 @@ jobs:
           
       - name: Setup iOS SDK
         run: |
+          rm -rf theos/sdks
           git clone https://github.com/theos/sdks.git theos/sdks
 
       - name: Build
         run: |
           export THEOS=${GITHUB_WORKSPACE}/theos
-          make package FINALPACKAGE=1
+          make
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
