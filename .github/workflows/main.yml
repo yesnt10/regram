@@ -48,6 +48,9 @@ jobs:
           rm -rf theos/sdks
           git clone https://github.com/theos/sdks.git theos/sdks
 
+      - name: Install ldid
+        run: brew install ldid
+
       - name: Build
         run: |
           export THEOS=${GITHUB_WORKSPACE}/theos
