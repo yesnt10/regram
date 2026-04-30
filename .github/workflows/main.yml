@@ -18,38 +18,40 @@ jobs:
           #import <Foundation/Foundation.h>
           
           %hook FRTweaksAuthController
+          // Her türlü doğrulama ve geçerlilik her zaman YES dönecek
+          - (BOOL)isVerified { return YES; }
+          - (BOOL)isValid { return YES; }
+          - (BOOL)isUnlocked { return YES; }
+          - (BOOL)requireAuth { return NO; } // Account girişi sormasın
           
-          // Siteye yönlendiren asıl fonksiyonlar! Bunları durdurup anında YES (Açıldı) yolluyoruz.
+          // Kilit ekranını (Web/Account) getiren fonskiyonları durdur!
           - (void)presentUnlockFromViewController:(id)vc completion:(void (^)(BOOL))completion {
               if (completion) { completion(YES); }
           }
           - (void)presentUnlockForLock:(id)lock fromViewController:(id)vc completion:(void (^)(BOOL))completion {
               if (completion) { completion(YES); }
           }
-          
-          // Standart kontroller
-          - (BOOL)isVerified { return YES; }
-          - (void)setIsVerified:(BOOL)arg1 { %orig(YES); }
-          - (BOOL)isValid { return YES; }
-          - (void)setIsValid:(BOOL)arg1 { %orig(YES); }
-          - (BOOL)isUnlocked { return YES; }
-          - (void)setIsUnlocked:(BOOL)arg1 { %orig(YES); }
-          - (BOOL)requireAuth { return NO; }
           %end
           
-          // Reel/Medya Kilidi
+          // Ayarlar sayfasındaki kilit (padlock) ikonlarını ve durumlarını yöneten sınıf
+          %hook RGFeatureLock
+          - (BOOL)isUnlocked { return YES; }
+          - (BOOL)isLocked { return NO; } // Asla kilitli değil
+          - (BOOL)isVerified { return YES; }
+          %end
+          
+          // Reels ve diğer gizli yerlerdeki kilitler
           %hook RGReelsUnlockHandler
           - (BOOL)isUnlocked { return YES; }
-          - (void)setIsUnlocked:(BOOL)arg1 { %orig(YES); }
           %end
           
-          // Ayar Yöneticileri
+          // Ayar Yöneticisinde premium kontrolü
           %hook RGSettingsManager
           - (BOOL)isVerified { return YES; }
           - (BOOL)isUnlocked { return YES; }
           %end
           
-          // Sistemin Kendi Kayıtları (Agresif Hook)
+          // UserDefaults (Uygulamanın kendi ayar kayıtlarına da sızıyoruz)
           %hook NSUserDefaults
           - (BOOL)boolForKey:(NSString *)defaultName {
               if (defaultName && [defaultName isKindOfClass:[NSString class]]) {
@@ -58,11 +60,12 @@ jobs:
                       [lower containsString:@"isunlocked"] || 
                       [lower containsString:@"ispro"] || 
                       [lower containsString:@"ispremium"] || 
-                      [lower containsString:@"haslicense"]) {
+                      [lower containsString:@"haslicense"] ||
+                      [lower containsString:@"requireauth"]) {
                       return YES;
                   }
               }
-              return %orig(defaultName);
+              return %orig;
           }
           %end
           EOF
