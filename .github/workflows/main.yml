@@ -18,17 +18,52 @@ jobs:
           #import <Foundation/Foundation.h>
           
           %hook FRTweaksAuthController
+          
+          // Siteye yönlendiren asıl fonksiyonlar! Bunları durdurup anında YES (Açıldı) yolluyoruz.
+          - (void)presentUnlockFromViewController:(id)vc completion:(void (^)(BOOL))completion {
+              if (completion) { completion(YES); }
+          }
+          - (void)presentUnlockForLock:(id)lock fromViewController:(id)vc completion:(void (^)(BOOL))completion {
+              if (completion) { completion(YES); }
+          }
+          
+          // Standart kontroller
           - (BOOL)isVerified { return YES; }
-          + (BOOL)isVerified { return YES; }
+          - (void)setIsVerified:(BOOL)arg1 { %orig(YES); }
           - (BOOL)isValid { return YES; }
-          + (BOOL)isValid { return YES; }
+          - (void)setIsValid:(BOOL)arg1 { %orig(YES); }
           - (BOOL)isUnlocked { return YES; }
-          + (BOOL)isUnlocked { return YES; }
+          - (void)setIsUnlocked:(BOOL)arg1 { %orig(YES); }
+          - (BOOL)requireAuth { return NO; }
           %end
           
+          // Reel/Medya Kilidi
           %hook RGReelsUnlockHandler
           - (BOOL)isUnlocked { return YES; }
-          + (BOOL)isUnlocked { return YES; }
+          - (void)setIsUnlocked:(BOOL)arg1 { %orig(YES); }
+          %end
+          
+          // Ayar Yöneticileri
+          %hook RGSettingsManager
+          - (BOOL)isVerified { return YES; }
+          - (BOOL)isUnlocked { return YES; }
+          %end
+          
+          // Sistemin Kendi Kayıtları (Agresif Hook)
+          %hook NSUserDefaults
+          - (BOOL)boolForKey:(NSString *)defaultName {
+              if (defaultName && [defaultName isKindOfClass:[NSString class]]) {
+                  NSString *lower = [defaultName lowercaseString];
+                  if ([lower containsString:@"verified"] || 
+                      [lower containsString:@"isunlocked"] || 
+                      [lower containsString:@"ispro"] || 
+                      [lower containsString:@"ispremium"] || 
+                      [lower containsString:@"haslicense"]) {
+                      return YES;
+                  }
+              }
+              return %orig(defaultName);
+          }
           %end
           EOF
           
